@@ -168,7 +168,7 @@ We love your input! We want to make contributing to SimpleDiskDB as easy and tra
 
 Feel free to file an issue on the repository or contact the maintainer:
 - GitHub: [@anandan-bs](https://github.com/anandan-bs)
-- Email: anandanklnace@gmail.com
+- Email: anandanklnce@gmail.com
 
 ### License
 
