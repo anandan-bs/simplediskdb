@@ -1,0 +1,279 @@
+{% extends "base.html" %}
+{% block title %}Query Database{% endblock %}
+{% block content %}
+<div class="row">
+   <div class="col-md-4">
+      <div class="card query-form">
+         <div class="card-body">
+            <h3 class="card-title mb-4">Query Builder</h3>
+            <form method="POST" action="{{ url_for('query') }}">
+               <div class="mb-3">
+                  <label for="conditions" class="form-label">Conditions (JSON)</label>
+                  <textarea class="form-control"
+                     id="conditions"
+                     name="conditions"
+                     rows="8"
+                     >{{ query_params.conditions if query_params else '' }}</textarea>
+                  <div class="form-text">
+                     <a href="#" data-bs-toggle="modal" data-bs-target="#queryHelpModal">Query syntax help »</a>
+                  </div>
+                  <!-- Query Help Modal -->
+                  <div class="modal fade" id="queryHelpModal" tabindex="-1">
+                     <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                           <div class="modal-header">
+                              <h5 class="modal-title">Query Syntax Help</h5>
+                              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                           </div>
+                           <div class="modal-body">
+                              <h6>Comparison Operators</h6>
+                              <ul>
+                                 <li><code>$eq</code>: Equals</li>
+                                 <li><code>$gt</code>, <code>$gte</code>: Greater than, Greater than or equal</li>
+                                 <li><code>$lt</code>, <code>$lte</code>: Less than, Less than or equal</li>
+                                 <li><code>$ne</code>: Not equal</li>
+                                 <li><code>$in</code>: In array</li>
+                                 <li><code>$regex</code>: Regular expression match</li>
+                              </ul>
+                              <h6>Logical Operators</h6>
+                              <ul>
+                                 <li><code>$and</code>: All conditions must match</li>
+                                 <li><code>$or</code>: Any condition must match</li>
+                                 <li><code>$not</code>: Negate a condition</li>
+                              </ul>
+                              <h6>Example Queries</h6>
+                              <pre><code class="language-json">// Find documents with specific value
+{
+  "field": "value"
+}
+
+// Find documents with value greater than 100
+{
+  "number_field": {"$gt": 100}
+}
+
+// Find documents matching any condition
+{
+  "$or": [
+    {"field1": "value1"},
+    {"field2": {"$gt": 100}}
+  ]
+}</code></pre>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+               <div class="mb-3">
+                  <label for="sort" class="form-label">Sort (JSON)</label>
+                  <textarea class="form-control"
+                     id="sort"
+                     name="sort"
+                     rows="3"
+                     placeholder='{"field1": <value>'>{{ query_params.sort if query_params else '' }}</textarea>
+                  <div class="form-text">1 for ascending, -1 for descending, either ascending or descending, both is not supported</div>
+               </div>
+               <div class="mb-3">
+                  <label for="limit" class="form-label">Limit</label>
+                  <input type="number"
+                     class="form-control"
+                     id="limit"
+                     name="limit"
+                     value="{{ query_params.limit if query_params else 10 }}"
+                     min="1"
+                     max="100">
+               </div>
+               <div class="d-grid">
+                  <button type="submit" class="btn btn-primary">Execute Query</button>
+               </div>
+            </form>
+         </div>
+      </div>
+   </div>
+   <div class="col-md-8">
+      {% if error %}
+      <div class="alert alert-danger">
+         <strong>Error:</strong> {{ error }}
+      </div>
+      {% endif %}
+      {% if query_params and query_params.conditions %}
+      <div class="card">
+         <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+               <h3 class="card-title mb-0">
+                  Query Results ({{ results|length if results else 'No records found' }})
+               </h3>
+               {% if results %}
+               <button type="button"
+                  class="btn btn-danger"
+                  data-bs-toggle="modal"
+                  data-bs-target="#deleteModal">
+               Delete Matching Records
+               </button>
+               {% endif %}
+            </div>
+            {% if results %}
+            <div class="table-responsive results-table">
+               <table class="table table-striped">
+                  <thead>
+                     <tr>
+                        {% for field, types in field_types.items() %}
+                        <th>{{ field }}</th>
+                        {% endfor %}
+                        <th>Details</th>
+                     </tr>
+                  </thead>
+                  <tbody>
+                     {% for doc in results %}
+                     <tr>
+                        {% for field in field_types.keys() %}
+                        <td>
+                           {% set value = doc.get(field, 'N/A') %}
+                           {% if field == 'status' and value != 'N/A' %}
+                           {% set status_info = get_status_info(value) %}
+                           <span class="status-badge {{ status_info.class }}"
+                              title="{{ status_info.description }}">
+                           {{ value }}
+                           </span>
+                           {% else %}
+                           <span class="text-wrap" style="max-width: 200px;">
+                           {{ format_value(value) }}
+                           </span>
+                           {% endif %}
+                        </td>
+                        {% endfor %}
+                        <td>
+                           <button class="btn btn-sm btn-info"
+                              data-bs-toggle="modal"
+                              data-bs-target="#docModal{{ loop.index }}">
+                           View
+                           </button>
+                        </td>
+                     </tr>
+                     <!-- Modal for document details -->
+                     <div class="modal fade" id="docModal{{ loop.index }}" tabindex="-1">
+                        <div class="modal-dialog modal-lg">
+                           <div class="modal-content">
+                              <div class="modal-header">
+                                 <h5 class="modal-title">Document Details</h5>
+                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                              </div>
+                              <div class="modal-body">
+                                 <pre><code class="language-json">{{ doc | tojson(indent=2) }}</code></pre>
+                              </div>
+                           </div>
+                        </div>
+                     </div>
+                     {% endfor %}
+                  </tbody>
+               </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+               No records match your query criteria.
+            </div>
+            {% endif %}
+         </div>
+      </div>
+      {% endif %}
+   </div>
+</div>
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+   <div class="modal-dialog">
+      <div class="modal-content">
+         <div class="modal-header">
+            <h5 class="modal-title">Confirm Delete</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+         </div>
+         <div class="modal-body">
+            <p class="text-danger">Warning: This action will permanently delete all records matching your query conditions.</p>
+            <p>Number of records to delete: <strong>{{ results|length if results else 0 }}</strong></p>
+            <p>Query conditions:</p>
+            <pre><code class="language-json">{{ query_params.conditions if query_params else '{}' }}</code></pre>
+            <div class="alert alert-warning mt-3">
+               <strong>Security Check:</strong> Please enter the delete secret key to proceed.
+            </div>
+            <div class="mb-3">
+               <label for="secretKey" class="form-label">Secret Key</label>
+               <input type="password"
+                  class="form-control"
+                  id="secretKey"
+                  placeholder="Enter secret key">
+               <div id="deleteError" class="invalid-feedback"></div>
+            </div>
+         </div>
+         <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-danger" onclick="confirmDelete()">Delete Records</button>
+         </div>
+      </div>
+   </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+   // Function to handle delete confirmation
+   window.confirmDelete = function() {
+       const secretKey = document.getElementById('secretKey').value;
+       const conditions = document.getElementById('conditions').value;
+       const deleteError = document.getElementById('deleteError');
+       const deleteModal = document.getElementById('deleteModal');
+
+       // Reset error state
+       deleteError.textContent = '';
+       document.getElementById('secretKey').classList.remove('is-invalid');
+
+       fetch('/delete', {
+           method: 'POST',
+           headers: {
+               'Content-Type': 'application/x-www-form-urlencoded',
+           },
+           body: new URLSearchParams({
+               'secret_key': secretKey,
+               'conditions': conditions
+           })
+       })
+       .then(response => response.json())
+       .then(data => {
+           if (data.error) {
+               // Show error in modal
+               deleteError.textContent = data.error;
+               document.getElementById('secretKey').classList.add('is-invalid');
+           } else {
+               // Close modal and reload page
+               bootstrap.Modal.getInstance(deleteModal).hide();
+               window.location.reload();
+               window.alert(data.message);
+           }
+       })
+       .catch(error => {
+           deleteError.textContent = 'An unexpected error occurred';
+           document.getElementById('secretKey').classList.add('is-invalid');
+       });
+   };
+
+   document.addEventListener('DOMContentLoaded', (event) => {
+       // Format JSON in textareas
+       const formatJsonTextarea = (textarea) => {
+           try {
+               const value = textarea.value.trim();
+               if (value) {
+                   const formatted = JSON.stringify(JSON.parse(value), null, 2);
+                   textarea.value = formatted;
+               }
+           } catch (e) {
+               // Invalid JSON, leave as is
+           }
+       };
+
+       document.querySelectorAll('textarea').forEach(textarea => {
+           formatJsonTextarea(textarea);
+           textarea.addEventListener('blur', () => formatJsonTextarea(textarea));
+       });
+
+       // Highlight all JSON code blocks
+       Prism.highlightAll();
+   });
+</script>
+{% endblock %}

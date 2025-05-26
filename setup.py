@@ -30,7 +30,11 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'simplediskdb=simplediskdb.db:main',
+            'simplediskdb=simplediskdb.cli:main',
         ],
     },
+    package_data={
+        'simplediskdb': ['templates/*'],
+    },
+    include_package_data=True,
 )

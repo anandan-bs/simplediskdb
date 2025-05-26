@@ -145,12 +145,12 @@ class Collection:
                 bool: True if any documents were deleted, False otherwise
         """
         with self._lock:
-            deleted = False
+            deleted = 0
             for key in self._cache.iterkeys():
                 doc = self._cache.get(key)
                 if doc and all(doc.get(k) == v for k, v in query.items()):
                     del self._cache[key]
-                    deleted = True
+                    deleted += 1
         return deleted
 
     def _match(self, doc, query):
@@ -192,7 +192,7 @@ class Collection:
                              reverse=(direction == -1))
         return results
 
-    def query(self, query: dict = None, projection: dict = None, sort: list = None, many=False):
+    def query(self, query: dict = None, projection: dict = None, sort: list = None, limit: int = None):
         """
         Find documents with support for query operators, field projection, and sorting.
 
@@ -204,6 +204,8 @@ class Collection:
         Returns:
             list: List of matched and transformed documents.
         """
+        if not limit:
+            limit = 1
         # Start filtering
         keys = self._cache.iterkeys()
         results = []
@@ -211,7 +213,7 @@ class Collection:
             doc = self._cache.get(key)
             if doc and self._match(doc, query or {}):
                 results.append(doc)
-                if not many:
+                if limit and len(results) >= limit:
                     break
         results = self._projection(projection, results)
         results = self._sort(sort, results)
@@ -226,9 +228,21 @@ class Collection:
         Returns:
                 dict: The matched document, or None if no document was found
         """
-        return self.query(query, projection, sort, many=False)
+        return self.query(query, projection, sort, limit=1)
 
-    def find_many(self, query: dict = None, projection: dict = None, sort: list = None):
+    def find_many(self, query: dict = None, projection: dict = None, sort: list = None, limit: int = 10):
+        """Find multiple documents matching the query.
+        Args:
+                query: MongoDB-style query to match the documents to find
+                projection: Fields to include/exclude. e.g., {"name": 1, "_id": 0}
+                sort: List of tuples to sort by. e.g., [("age", 1), ("name", -1)]
+                limit: Maximum number of documents to return
+        Returns:
+                list: List of matched documents
+        """
+        return self.query(query, projection=projection, sort=sort, limit=limit)
+
+    def find_all(self, query: dict = None, projection: dict = None, sort: list = None):
         """Find multiple documents matching the query.
         Args:
                 query: MongoDB-style query to match the documents to find
@@ -237,7 +251,7 @@ class Collection:
         Returns:
                 list: List of matched documents
         """
-        return self.query(query, projection=projection, sort=sort, many=True)
+        return self.query(query, projection=projection, sort=sort, limit=None)
 
     def drop(self):
         """Drop the collection, removing all documents and the collection directory."""

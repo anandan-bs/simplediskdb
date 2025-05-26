@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Recent Documents{% endblock %}
+{% block content %}
+<div class="card">
+   <div class="card-body">
+      <h2 class="card-title">Recent Documents</h2>
+      <div class="table-responsive">
+         <table class="table table-striped">
+            <thead>
+               <tr>
+                  <th>ID</th>
+                  <th>Created At</th>
+                  <th>Last Updated</th>
+                  <th>Details</th>
+               </tr>
+            </thead>
+            <tbody>
+               {% for doc in documents|sort(attribute='created_at', reverse=true) %}
+               <tr>
+                  <td>{{ doc.get('_id', 'N/A') }}</td>
+                  <td>{{ format_value(doc.get('created_at', 'N/A')) }}</td>
+                  <td>{{ format_value(doc.get('last_updated_at', 'N/A')) }}</td>
+                  <td>
+                     <button class="btn btn-sm btn-info"
+                        data-bs-toggle="modal"
+                        data-bs-target="#docModal{{ loop.index }}">
+                     View
+                     </button>
+                  </td>
+               </tr>
+               <!-- Modal for document details -->
+               <div class="modal fade" id="docModal{{ loop.index }}" tabindex="-1">
+                  <div class="modal-dialog modal-lg">
+                     <div class="modal-content">
+                        <div class="modal-header">
+                           <h5 class="modal-title">Document Details</h5>
+                           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                           <pre><code class="language-json">{{ doc | tojson(indent=2) }}</code></pre>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+               {% endfor %}
+            </tbody>
+         </table>
+      </div>
+   </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+   document.addEventListener('DOMContentLoaded', (event) => {
+       // Highlight all JSON code blocks
+       Prism.highlightAll();
+   });
+</script>
+{% endblock %}

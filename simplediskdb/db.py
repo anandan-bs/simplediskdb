@@ -84,12 +84,11 @@ for various components of the application, ensuring data persistence and
 offering powerful querying capabilities.
 """
 
-import argparse
 from datetime import datetime, timedelta
 from logging import getLogger, StreamHandler, Formatter
 from pathlib import Path
 from threading import Lock, RLock
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Union
 
 from .collection import Collection
 from .exceptions import NoCollectionError
@@ -254,23 +253,3 @@ def delete_example_data():
     for collection in db.list_collections():
         db.drop_collection(collection)
     logger.info("Deleted example data. Collections: %s", db.list_collections())
-
-
-def main():
-    parser = argparse.ArgumentParser(
-        description='Simple disk database - MongoDB-style disk-based database')
-    parser.add_argument('--load-example', action='store_true',
-                        help='Load example data into the database')
-    parser.add_argument('--delete-example', action='store_true',
-                        help='Delete all example data from the database')
-    args = parser.parse_args()
-
-    if args.load_example:
-        load_example_data()
-    elif args.delete_example:
-        delete_example_data()
-    else:
-        parser.print_help()
-
-if __name__ == "__main__":
-    main()

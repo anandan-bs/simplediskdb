@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}DiskCache Viewer - Home{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+   <div class="col-md-6">
+      <div class="card">
+         <div class="card-body">
+            <h2 class="card-title text-center mb-4">Welcome to DiskCache Viewer</h2>
+            <form method="POST" action="{{ url_for('index') }}">
+               <div class="mb-3">
+                  <label for="cache_dir" class="form-label">Data Base Disk Directory Location</label>
+                  <input type="text"
+                     class="form-control"
+                     id="cache_dir"
+                     name="cache_dir"
+                     value="{{ cache_dir }}"
+                     required>
+                  <div class="form-text">Enter the path to your data base disk directory</div>
+               </div>
+               <div class="mb-3">
+                  <label for="collection_name" class="form-label">Collection Name</label>
+                  <select class="form-select" id="collection_name" name="collection_name" required>
+                     <option value="">Select a collection</option>
+                  </select>
+                  <div class="form-text">Select the name of the collection to connect to</div>
+               </div>
+               <div class="d-grid">
+                  <button type="submit" class="btn btn-primary">Connect to Database</button>
+               </div>
+            </form>
+         </div>
+      </div>
+   </div>
+</div>
+<script>
+   document.getElementById('cache_dir').addEventListener('change', function() {
+       const cacheDir = this.value;
+       const collectionSelect = document.getElementById('collection_name');
+
+       // Clear existing options
+       collectionSelect.innerHTML = '<option value="">Loading...</option>';
+
+       fetch('/list_collections', {
+           method: 'POST',
+           headers: {
+               'Content-Type': 'application/json'
+           },
+           body: JSON.stringify({ cache_dir: cacheDir })
+       })
+       .then(response => response.json())
+       .then(data => {
+           collectionSelect.innerHTML = '';
+           if (data.collections.length === 0) {
+               collectionSelect.innerHTML = '<option value="">No collections found</option>';
+           } else {
+               collectionSelect.innerHTML = '<option value="">Select a collection</option>';
+               data.collections.forEach(collection => {
+                   const option = document.createElement('option');
+                   option.value = collection;
+                   option.text = collection;
+                   collectionSelect.appendChild(option);
+               });
+           }
+       })
+       .catch(err => {
+           console.error('Error fetching DB names:', err);
+           collectionSelect.innerHTML = '<option value="">Error fetching collections</option>';
+       });
+   });
+</script>
+{% endblock %}
