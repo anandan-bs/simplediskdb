@@ -5,16 +5,16 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="simplediskdb",
-    version="0.2.0",
+    version="1.0.0",
     author="Anandan B S",
     author_email="anandanklnce@gmail.com",
-    description="A MongoDB-style disk-based database implementation",
+    description="A MongoDB-style disk-based database implementation, persistent storage for python",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/anandan-bs/simplediskdb",
     packages=find_packages(),
     classifiers=[
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
@@ -27,6 +27,7 @@ setup(
     python_requires=">=3.7",
     install_requires=[
         "diskcache>=5.0.0",
+        "flask>=2.0.0",
     ],
     entry_points={
         'console_scripts': [

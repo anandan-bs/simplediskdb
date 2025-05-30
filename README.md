@@ -12,6 +12,12 @@ A MongoDB-style disk-based database implementation for Python applications. Simp
 - Projection support to retrieve specific fields
 - Data persistence across application restarts
 
+## Use Cases
+
+- Distributed applications that require a database but don't want to deal with the complexity of a full database system. [Application uses network disk for storage, hence distribution comes for free]
+- Serverless, Zero-configuration, Zero-dependency applications that require a database.
+- CI/CD scripts that require containers to store the persistent data.
+
 ## Installation
 
 ```bash
@@ -33,56 +39,6 @@ simplediskdb --help
 # or
 python -m simplediskdb --help
 ```
-
-## Web Viewer Interface
-
-SimpleDiskDB comes with a built-in web viewer that allows you to browse, query, and manage your database collections through a user-friendly interface.
-
-### Starting the Viewer
-
-```bash
-# Start the viewer on default host (127.0.0.1) and port (5000)
-python -m simplediskdb viewer
-
-# Start on a specific host and port
-python -m simplediskdb viewer --host 0.0.0.0 --port 8000
-```
-
-### Features
-
-#### Home Page
-![Home Page](screenshots/home.png)
-- Lists all available collections in your database
-- Shows document count for each collection
-- Quick links to view or query collections
-
-#### View Documents
-![View Documents](screenshots/view-documents.png)
-- Browse all documents in a collection
-- Documents are displayed in a paginated table
-- JSON view for better readability
-- Copy document content to clipboard
-
-#### Query Interface
-![Query Interface](screenshots/query.png)
-- Write and execute MongoDB-style queries
-- Support for complex queries using operators ($and, $or, $gt, etc.)
-- Query results shown in real-time
-- Export query results
-
-#### Delete Documents
-![Delete Interface](screenshots/delete.png)
-- Delete documents matching specific query conditions
-- **Important Security Note**: The default delete secret key is `simplediskdb`. For production use, you should change this by setting the `DELETE_SECRET_KEY` environment variable:
-  ```bash
-  # Windows
-  set DELETE_SECRET_KEY=your-secure-key
-
-  # Linux/Mac
-  export DELETE_SECRET_KEY=your-secure-key
-  ```
-- Confirmation required before deletion
-- Shows count of matching documents before deletion
 
 ## Usage
 
@@ -131,6 +87,67 @@ results = tasks.find(
 for doc in results:
     print(doc)
 ```
+
+## Web Viewer Interface
+
+SimpleDiskDB comes with a built-in web viewer that allows you to browse, query, and manage your database collections through a user-friendly interface.
+
+### Starting the Viewer
+
+```bash
+# Start the viewer on default host (127.0.0.1) and port (5000)
+simplediskdb viewer
+or
+python -m simplediskdb viewer
+
+# Start on a specific host and port
+simplediskdb viewer --host 0.0.0.0 --port 8000
+or
+python -m simplediskdb viewer --host 0.0.0.0 --port 8000
+```
+
+### Features
+
+#### Home Page
+![Home Page](https://raw.githubusercontent.com/anandan-bs/simplediskdb/main/screenshots/home.png)
+- Lists all available collections in your database
+- Shows document count for each collection
+- Quick links to view or query collections
+
+#### View Documents
+![View Documents](https://raw.githubusercontent.com/anandan-bs/simplediskdb/main/screenshots/view-documents.png)
+- Browse all documents in a collection
+- Documents are displayed in a paginated table
+- JSON view for better readability
+- Copy document content to clipboard
+
+#### Query Interface
+![Query Interface](https://raw.githubusercontent.com/anandan-bs/simplediskdb/main/screenshots/query.png)
+- Write and execute MongoDB-style queries
+- Support for complex queries using operators ($and, $or, $gt, etc.)
+- Query results shown in real-time
+- Export query results
+
+#### Delete Documents
+![Delete Interface](https://raw.githubusercontent.com/anandan-bs/simplediskdb/main/screenshots/delete.png)
+- Delete documents matching specific query conditions
+- **Important Security Note**: The default delete secret key is `simplediskdb`. For production use, you should change this by setting the `DELETE_SECRET_KEY` environment variable:
+  ```bash
+  # Windows
+  set DELETE_SECRET_KEY=your-secure-key
+
+  # Linux/Mac
+  export DELETE_SECRET_KEY=your-secure-key
+  ```
+- Confirmation required before deletion
+- Shows count of matching documents before deletion
+
+
+## TODO
+
+- Add support for more operators ($regex.)
+- Time To Live (TTL) support
+- Indexing support
 
 ## License
 
